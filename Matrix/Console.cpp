@@ -22,6 +22,42 @@ void Console::setColor(CharacterColor color)
     case CharacterColor::Green:
         SetConsoleTextAttribute(consoleHandle, FOREGROUND_GREEN);
         break;
+
+    case CharacterColor::Red:
+        SetConsoleTextAttribute(consoleHandle, FOREGROUND_RED);
+        break;
+
+    case CharacterColor::Blue:
+        SetConsoleTextAttribute(consoleHandle, FOREGROUND_BLUE);
+        break;
+
+    case CharacterColor::Cyan:
+        SetConsoleTextAttribute(
+            consoleHandle,
+            FOREGROUND_GREEN | FOREGROUND_BLUE
+        );
+        break;
+
+    case CharacterColor::Yellow:
+        SetConsoleTextAttribute(
+            consoleHandle,
+            FOREGROUND_RED | FOREGROUND_GREEN
+        );
+        break;
+
+    case CharacterColor::Magenta:
+        SetConsoleTextAttribute(
+            consoleHandle,
+            FOREGROUND_RED | FOREGROUND_BLUE
+        );
+        break;
+
+    case CharacterColor::White:
+        SetConsoleTextAttribute(
+            consoleHandle,
+            FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+        );
+        break;
     }
 }
 

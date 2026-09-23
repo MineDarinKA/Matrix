@@ -1,7 +1,11 @@
 #include "Line.h"
+#include <cstdlib>
 
-Line::Line(int length, int x, int y)
-    : length(length), x(x), y(y)
+Line::Line(int length, int x, int y, char epilepsyMode)
+    : length(length),
+    x(x),
+    y(y),
+    epilepsyMode(epilepsyMode)
 {
     createCharacters();
 }
@@ -26,6 +30,11 @@ int Line::getY() const
     return y;
 }
 
+int Line::getCharacterOffset(int index) const
+{
+    return index % 2 == 0 ? 1 : 0;
+}
+
 const std::vector<Character>& Line::getCharacters() const
 {
     return characters;
@@ -38,11 +47,14 @@ void Line::createCharacters()
     for (int index = 0; index < length; ++index)
     {
         char symbol = static_cast<char>('A' + index % 26);
-        characters.emplace_back(symbol, CharacterColor::Green);
-    }
-}
+        CharacterColor color = CharacterColor::Green;
 
-int Line::getCharacterOffset(int index) const
-{
-    return index % 2 == 0 ? 1 : 0;
+        if (epilepsyMode == 'Y' || epilepsyMode == 'y')
+        {
+            int colorIndex = std::rand() % 7;
+            color = static_cast<CharacterColor>(colorIndex);
+        }
+
+        characters.emplace_back(symbol, color);
+    }
 }

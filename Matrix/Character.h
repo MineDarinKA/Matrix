@@ -3,7 +3,13 @@
 // Defines available character colors
 enum class CharacterColor
 {
-    Green
+    Green,
+    Red,
+    Blue,
+    Cyan,
+    Yellow,
+    Magenta,
+    White
 };
 
 // Represents one matrix character

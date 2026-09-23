@@ -7,24 +7,23 @@
 class Line
 {
 public:
-    Line(int length, int x, int y);
+    Line(int length, int x, int y, char epilepsyMode);
 
     void move();
 
     int getLength() const;
     int getX() const;
     int getY() const;
+    int getCharacterOffset(int index) const;
     const std::vector<Character>& getCharacters() const;
 
 private:
     // Creates characters for the line
     void createCharacters();
 
-    // Returns horizontal offset for a character in the zig-zag line
-    int getCharacterOffset(int index) const;
-
     int length;
     int x;
     int y;
+    char epilepsyMode;
     std::vector<Character> characters;
 };
