@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <iostream>
 
+// Sets the console cursor position
 void Console::setCursorPosition(int x, int y)
 {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -13,6 +14,7 @@ void Console::setCursorPosition(int x, int y)
     SetConsoleCursorPosition(consoleHandle, position);
 }
 
+// Sets the console text color
 void Console::setColor(CharacterColor color)
 {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -61,14 +63,40 @@ void Console::setColor(CharacterColor color)
     }
 }
 
+// Writes a character to the console
 void Console::writeCharacter(const Character& character)
 {
     setColor(character.getColor());
     std::cout << character.getSymbol();
+    std::cout.flush();
 }
 
+// Clears a character at the specified position
 void Console::clearCharacter(int x, int y)
 {
     setCursorPosition(x, y);
     std::cout << ' ';
+    std::cout.flush();
+}
+
+// Returns the visible console width
+int Console::getWidth()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(consoleHandle, &consoleInfo);
+
+    return consoleInfo.srWindow.Right - consoleInfo.srWindow.Left + 1;
+}
+
+// Returns the visible console height
+int Console::getHeight()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(consoleHandle, &consoleInfo);
+
+    return consoleInfo.srWindow.Bottom - consoleInfo.srWindow.Top + 1;
 }

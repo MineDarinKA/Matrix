@@ -139,12 +139,14 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ApplicationManager.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Console.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ApplicationManager.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="Line.h" />

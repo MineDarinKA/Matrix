@@ -10,4 +10,7 @@ public:
     static void setColor(CharacterColor color);
     static void writeCharacter(const Character& character);
     static void clearCharacter(int x, int y);
+
+    static int getWidth();
+    static int getHeight();
 };

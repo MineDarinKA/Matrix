@@ -1,18 +1,31 @@
 #include "Line.h"
 #include <cstdlib>
 
+// Creates a line with the specified parameters
 Line::Line(int length, int x, int y, char epilepsyMode)
     : length(length),
     x(x),
     y(y),
-    epilepsyMode(epilepsyMode)
+    epilepsyMode(epilepsyMode),
+    removedCharacterY(0),
+    characterRemoved(false)
 {
-    createCharacters();
 }
 
+// Moves the line one step upward
 void Line::move()
 {
     --y;
+    characterRemoved = false;
+
+    characters.push_front(createCharacter());
+
+    if (static_cast<int>(characters.size()) > length)
+    {
+        removedCharacterY = y + length;
+        characters.pop_back();
+        characterRemoved = true;
+    }
 }
 
 int Line::getLength() const
@@ -20,41 +33,58 @@ int Line::getLength() const
     return length;
 }
 
-int Line::getX() const
-{
-    return x;
-}
-
 int Line::getY() const
 {
     return y;
 }
 
-int Line::getCharacterOffset(int index) const
+const Character& Line::getNewCharacter() const
 {
-    return index % 2 == 0 ? 1 : 0;
+    return characters.front();
 }
 
-const std::vector<Character>& Line::getCharacters() const
+int Line::getNewCharacterX() const
 {
-    return characters;
+    return x + getCharacterOffset(y);
 }
 
-void Line::createCharacters()
+int Line::getNewCharacterY() const
 {
-    characters.clear();
+    return y;
+}
 
-    for (int index = 0; index < length; ++index)
+bool Line::hasRemovedCharacter() const
+{
+    return characterRemoved;
+}
+
+int Line::getRemovedCharacterX() const
+{
+    return x + getCharacterOffset(removedCharacterY);
+}
+
+int Line::getRemovedCharacterY() const
+{
+    return removedCharacterY;
+}
+
+// Creates a new character with the current color mode
+Character Line::createCharacter() const
+{
+    char symbol = static_cast<char>('A' + std::rand() % 26);
+    CharacterColor color = CharacterColor::Green;
+
+    if (epilepsyMode == 'Y' || epilepsyMode == 'y')
     {
-        char symbol = static_cast<char>('A' + index % 26);
-        CharacterColor color = CharacterColor::Green;
-
-        if (epilepsyMode == 'Y' || epilepsyMode == 'y')
-        {
-            int colorIndex = std::rand() % 7;
-            color = static_cast<CharacterColor>(colorIndex);
-        }
-
-        characters.emplace_back(symbol, color);
+        int colorIndex = std::rand() % 7;
+        color = static_cast<CharacterColor>(colorIndex);
     }
+
+    return Character(symbol, color);
+}
+
+// Calculates the horizontal offset of a character in the zig-zag line
+int Line::getCharacterOffset(int characterY) const
+{
+    return characterY % 2 == 0 ? 1 : 0;
 }

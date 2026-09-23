@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <deque>
 #include "Character.h"
 
 // Represents a line moving from bottom to top
@@ -12,18 +12,30 @@ public:
     void move();
 
     int getLength() const;
-    int getX() const;
     int getY() const;
-    int getCharacterOffset(int index) const;
-    const std::vector<Character>& getCharacters() const;
+
+    const Character& getNewCharacter() const;
+    int getNewCharacterX() const;
+    int getNewCharacterY() const;
+
+    bool hasRemovedCharacter() const;
+    int getRemovedCharacterX() const;
+    int getRemovedCharacterY() const;
 
 private:
-    // Creates characters for the line
-    void createCharacters();
+    // Creates a new character with the current color mode
+    Character createCharacter() const;
+
+    // Calculates the horizontal offset of a character in the zig-zag line
+    int getCharacterOffset(int characterY) const;
 
     int length;
     int x;
     int y;
     char epilepsyMode;
-    std::vector<Character> characters;
+
+    std::deque<Character> characters;
+
+    int removedCharacterY;
+    bool characterRemoved;
 };
