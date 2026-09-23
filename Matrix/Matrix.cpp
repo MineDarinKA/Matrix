@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <sstream>
 #include <string>
+#include "Character.h"
 
 int main(int argc, char* argv[])
 {
