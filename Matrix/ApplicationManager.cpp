@@ -6,8 +6,9 @@
 #include <thread>
 
 // Creates an application manager with the specified parameters
-ApplicationManager::ApplicationManager(int speed, int length, char epilepsyMode)
-    : speed(speed),
+ApplicationManager::ApplicationManager(int frequency, int speed, int length, char epilepsyMode)
+    : frequency(frequency),
+    speed(speed),
     length(length),
     epilepsyMode(epilepsyMode),
     line(nullptr)

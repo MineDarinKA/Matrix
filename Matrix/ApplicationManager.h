@@ -7,7 +7,7 @@
 class ApplicationManager
 {
 public:
-    ApplicationManager(int speed, int length, char epilepsyMode);
+    ApplicationManager(int frequency, int speed, int length, char epilepsyMode);
 
     void run();
 
@@ -24,6 +24,7 @@ private:
     // Checks whether the line has completely left the console
     bool isLineFinished() const;
 
+    int frequency;
     int speed;
     int length;
     char epilepsyMode;

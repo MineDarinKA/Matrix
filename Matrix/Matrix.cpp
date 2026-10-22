@@ -5,6 +5,7 @@
 
 int main(int argc, char* argv[])
 {
+    int frequency;
     int speed;
     int length;
     char epilepsyMode;
@@ -12,7 +13,8 @@ int main(int argc, char* argv[])
     // Display command line usage information
     if (argc == 2 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "/?"))
     {
-        std::cout << "Usage: Matrix.exe [speed] [length] [epilepsy mode]\n";
+        std::cout << "Usage: Matrix.exe [frequency] [speed] [length] [epilepsy mode]\n";
+        std::cout << "Frequency: 1-30 lines per second\n";
         std::cout << "Speed: 1-30 characters per second\n";
         std::cout << "Line length: 1-30 characters\n";
         std::cout << "Epilepsy mode: Y/N\n";
@@ -20,13 +22,23 @@ int main(int argc, char* argv[])
     }
 
     // Read and validate parameters from the command line
-    if (argc == 4)
+    if (argc == 5)
     {
-        std::stringstream speedStream(argv[1]);
-        std::stringstream lengthStream(argv[2]);
-        std::string mode = argv[3];
+        std::stringstream frequencyStream(argv[1]);
+        std::stringstream speedStream(argv[2]);
+        std::stringstream lengthStream(argv[3]);
+        std::string mode = argv[4];
 
         std::string remainingInput;
+
+        if (!(frequencyStream >> frequency) ||
+            (frequencyStream >> remainingInput) ||
+            frequency < 1 ||
+            frequency > 30)
+        {
+            std::cout << "Invalid frequency.\n";
+            return 1;
+        }
 
         if (speedStream >> speed &&
             !(speedStream >> remainingInput) &&
@@ -69,6 +81,26 @@ int main(int argc, char* argv[])
     else if (argc == 1)
     {
         std::string input;
+
+        // Request and validate line generation frequency
+        while (true)
+        {
+            std::cout << "Enter frequency (1-30): ";
+            std::getline(std::cin, input);
+
+            std::stringstream stream(input);
+            if (stream >> frequency)
+            {
+                std::string remainingInput;
+
+                if (!(stream >> remainingInput) && frequency >= 1 && frequency <= 30)
+                {
+                    break;
+                }
+            }
+
+            std::cout << "Invalid frequency.\n";
+        }
 
         // Request and validate line speed
         while (true)
@@ -139,7 +171,7 @@ int main(int argc, char* argv[])
     }
 
     // Create and run the application
-    ApplicationManager applicationManager(speed, length, epilepsyMode);
+    ApplicationManager applicationManager(frequency, speed, length, epilepsyMode);
     applicationManager.run();
 
     return 0;
