@@ -19,6 +19,8 @@ ApplicationManager::ApplicationManager(int speed, int length, char epilepsyMode)
 // Runs the Matrix application
 void ApplicationManager::run()
 {
+    Console::clearScreen();
+
     while (true)
     {
         createLine();

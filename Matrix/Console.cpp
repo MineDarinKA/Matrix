@@ -2,6 +2,45 @@
 #include <windows.h>
 #include <iostream>
 
+// Clears the console before rendering starts
+void Console::clearScreen()
+{
+    std::cout.flush();
+
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+
+    if (!GetConsoleScreenBufferInfo(consoleHandle, &consoleInfo))
+    {
+        return;
+    }
+
+    DWORD bufferSize = static_cast<DWORD>(consoleInfo.dwSize.X)
+        * static_cast<DWORD>(consoleInfo.dwSize.Y);
+
+    COORD startPosition = { 0, 0 };
+    DWORD charactersWritten = 0;
+
+    FillConsoleOutputCharacterA(
+        consoleHandle,
+        ' ',
+        bufferSize,
+        startPosition,
+        &charactersWritten
+    );
+
+    FillConsoleOutputAttribute(
+        consoleHandle,
+        consoleInfo.wAttributes,
+        bufferSize,
+        startPosition,
+        &charactersWritten
+    );
+
+    SetConsoleCursorPosition(consoleHandle, startPosition);
+}
+
 // Sets the console cursor position
 void Console::setCursorPosition(int x, int y)
 {
