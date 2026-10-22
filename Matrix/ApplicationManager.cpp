@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
-#include <thread>
+#include <windows.h>
 
 // Creates an application manager with the specified parameters
 ApplicationManager::ApplicationManager(int frequency, int speed, int length, char epilepsyMode)
@@ -28,15 +28,17 @@ void ApplicationManager::run()
 
         while (!isLineFinished())
         {
-            line->move();
+            const auto currentTime = Line::Clock::now();
 
-            renderNewCharacter();
-            clearRemovedCharacter();
-
-            // Sets the line step frequency according to the specified speed
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(1000 / speed)
-            );
+            if (line->update(currentTime))
+            {
+                renderNewCharacter();
+                clearRemovedCharacter();
+            }
+            else
+            {
+                Sleep(1);
+            }
         }
 
         line.reset();
@@ -56,7 +58,9 @@ void ApplicationManager::createLine()
 
     int y = Console::getHeight();
 
-    line = std::make_unique<Line>(length, x, y, epilepsyMode);
+    line = std::make_unique<Line>(
+        length, x, y, epilepsyMode, speed, Line::Clock::now()
+    );
 }
 
 // Renders the newly generated character

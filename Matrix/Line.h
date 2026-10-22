@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <deque>
 #include "Character.h"
 
@@ -7,9 +8,15 @@
 class Line
 {
 public:
-    Line(int length, int x, int y, char epilepsyMode);
+    using Clock = std::chrono::steady_clock;
 
-    void move();
+    Line(int length, int x, int y, char epilepsyMode, int speed, Clock::time_point startTime);
+
+    // Updates the line when its next movement step is due
+    bool update(Clock::time_point currentTime);
+
+    // Returns the scheduled time of the next movement step
+    Clock::time_point getNextMoveTime() const;
 
     int getLength() const;
     int getY() const;
@@ -23,6 +30,9 @@ public:
     int getRemovedCharacterY() const;
 
 private:
+    // Moves the line one step upward and updates its characters
+    void move();
+
     // Creates a new character with the current color mode
     Character createCharacter() const;
 
@@ -33,6 +43,12 @@ private:
     int x;
     int y;
     char epilepsyMode;
+
+    // Time interval between consecutive movement steps
+    Clock::duration stepInterval;
+
+    // Scheduled time of the next movement step
+    Clock::time_point nextMoveTime;
 
     std::deque<Character> characters;
 

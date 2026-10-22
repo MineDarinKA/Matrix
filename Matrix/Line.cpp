@@ -2,14 +2,37 @@
 #include <cstdlib>
 
 // Creates a line with the specified parameters
-Line::Line(int length, int x, int y, char epilepsyMode)
+Line::Line(int length, int x, int y, char epilepsyMode, int speed, Clock::time_point startTime)
     : length(length),
     x(x),
     y(y),
     epilepsyMode(epilepsyMode),
+    stepInterval(std::chrono::duration_cast<Clock::duration>(
+        std::chrono::duration<double>(1.0 / speed))),
+    nextMoveTime(startTime),
     removedCharacterY(0),
     characterRemoved(false)
 {
+}
+
+// Updates the line when its next movement step is due
+bool Line::update(Clock::time_point currentTime)
+{
+    if (currentTime < nextMoveTime)
+    {
+        return false;
+    }
+
+    move();
+    nextMoveTime += stepInterval;
+
+    return true;
+}
+
+// Returns the scheduled time of the next movement step
+Line::Clock::time_point Line::getNextMoveTime() const
+{
+    return nextMoveTime;
 }
 
 // Moves the line one step upward
