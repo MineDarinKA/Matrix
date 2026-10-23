@@ -100,18 +100,50 @@ void ApplicationManager::run()
     }
 }
 
-// Creates a new line at a random horizontal position
+// Creates a new line at an unoccupied position when possible
 void ApplicationManager::createLine(Line::Clock::time_point startTime)
 {
-    int consoleWidth = Console::getWidth();
-    int x = 0;
+    const int consoleWidth = Console::getWidth();
+    const int positionCount = consoleWidth > 2 ? consoleWidth - 2 : 1;
 
-    if (consoleWidth > 2)
+    std::vector<bool> occupiedPositions(
+        static_cast<std::size_t>(positionCount), false
+    );
+
+    for (const Line& activeLine : lines)
     {
-        x = std::rand() % (consoleWidth - 2);
+        const int activeX = activeLine.getX();
+
+        if (activeX >= 0 && activeX < positionCount)
+        {
+            occupiedPositions[activeX] = true;
+        }
     }
 
-    int y = Console::getHeight();
+    std::vector<int> freePositions;
+
+    for (int candidateX = 0; candidateX < positionCount; ++candidateX)
+    {
+        if (!occupiedPositions[candidateX])
+        {
+            freePositions.push_back(candidateX);
+        }
+    }
+
+    int x = 0;
+
+    if (!freePositions.empty())
+    {
+        const int randomIndex = std::rand() % static_cast<int>(freePositions.size());
+        x = freePositions[randomIndex];
+    }
+    else
+    {
+        // Reuses an occupied position if no free positions remain
+        x = std::rand() % positionCount;
+    }
+
+    const int y = Console::getHeight();
 
     lines.emplace_back(
         length, x, y, epilepsyMode, speed, startTime

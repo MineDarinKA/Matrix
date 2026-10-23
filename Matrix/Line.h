@@ -19,6 +19,7 @@ public:
     Clock::time_point getNextMoveTime() const;
 
     int getLength() const;
+    int getX() const;
     int getY() const;
 
     const Character& getNewCharacter() const;

@@ -56,6 +56,11 @@ int Line::getLength() const
     return length;
 }
 
+int Line::getX() const
+{
+    return x;
+}
+
 int Line::getY() const
 {
     return y;
