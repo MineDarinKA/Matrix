@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <utility>
 #include <windows.h>
 
 // Creates an application manager with the specified parameters
@@ -49,10 +50,14 @@ void ApplicationManager::run()
     auto spawnTimes = generateSpawnSchedule(secondStart);
     std::size_t nextSpawnIndex = 0;
 
+    std::vector<std::pair<int, int>> changedPositions;
+
     while (true)
     {
         const auto currentTime = Line::Clock::now();
         bool updated = false;
+
+        changedPositions.clear();
 
         // Creates all lines whose scheduled appearance time has passed
         while (true)
@@ -74,7 +79,7 @@ void ApplicationManager::run()
             updated = true;
         }
 
-        // Updates every active line independently
+        // Updates all lines and records changed positions
         for (Line& activeLine : lines)
         {
             if (!activeLine.update(currentTime))
@@ -82,8 +87,19 @@ void ApplicationManager::run()
                 continue;
             }
 
-            renderNewCharacter(activeLine);
-            clearRemovedCharacter(activeLine);
+            changedPositions.emplace_back(
+                activeLine.getNewCharacterX(),
+                activeLine.getNewCharacterY()
+            );
+
+            if (activeLine.hasRemovedCharacter())
+            {
+                changedPositions.emplace_back(
+                    activeLine.getRemovedCharacterX(),
+                    activeLine.getRemovedCharacterY()
+                );
+            }
+
             updated = true;
         }
 
@@ -92,6 +108,19 @@ void ApplicationManager::run()
             {
                 return isLineFinished(activeLine);
             });
+
+        // Redraws each changed position only once
+        std::sort(changedPositions.begin(), changedPositions.end());
+
+        changedPositions.erase(
+            std::unique(changedPositions.begin(), changedPositions.end()),
+            changedPositions.end()
+        );
+
+        for (const auto& position : changedPositions)
+        {
+            renderPosition(position.first, position.second);
+        }
 
         if (!updated)
         {
@@ -150,36 +179,33 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
     );
 }
 
-// Renders the newly generated character of a line
-void ApplicationManager::renderNewCharacter(const Line& activeLine)
+// Renders the visible character at a console position
+void ApplicationManager::renderPosition(int x, int y) const
 {
-    int characterX = activeLine.getNewCharacterX();
-    int characterY = activeLine.getNewCharacterY();
-
-    if (characterX >= 0 && characterX < Console::getWidth() &&
-        characterY >= 0 && characterY < Console::getHeight())
-    {
-        Console::setCursorPosition(characterX, characterY);
-        Console::writeCharacter(activeLine.getNewCharacter());
-    }
-}
-
-// Clears the character removed from a line
-void ApplicationManager::clearRemovedCharacter(const Line& activeLine)
-{
-    if (!activeLine.hasRemovedCharacter())
+    if (x < 0 || x >= Console::getWidth() ||
+        y < 0 || y >= Console::getHeight())
     {
         return;
     }
 
-    int characterX = activeLine.getRemovedCharacterX();
-    int characterY = activeLine.getRemovedCharacterY();
-
-    if (characterX >= 0 && characterX < Console::getWidth() &&
-        characterY >= 0 && characterY < Console::getHeight())
+    // Gives priority to the most recently created line
+    for (auto lineIterator = lines.rbegin();
+        lineIterator != lines.rend();
+        ++lineIterator)
     {
-        Console::clearCharacter(characterX, characterY);
+        const Character* character = lineIterator->getCharacterAt(x, y);
+
+        if (character == nullptr)
+        {
+            continue;
+        }
+
+        Console::setCursorPosition(x, y);
+        Console::writeCharacter(*character);
+        return;
     }
+
+    Console::clearCharacter(x, y);
 }
 
 // Checks whether a line has completely left the console

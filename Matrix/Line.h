@@ -22,6 +22,9 @@ public:
     int getX() const;
     int getY() const;
 
+    // Returns the character at a specified position, or nullptr if absent
+    const Character* getCharacterAt(int characterX, int characterY) const;
+
     const Character& getNewCharacter() const;
     int getNewCharacterX() const;
     int getNewCharacterY() const;

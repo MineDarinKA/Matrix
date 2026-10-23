@@ -20,11 +20,8 @@ private:
     // Creates a new line at a random horizontal position
     void createLine(Line::Clock::time_point startTime);
 
-    // Renders the newly generated character
-    void renderNewCharacter(const Line& activeLine);
-
-    // Clears the character removed from the end
-    void clearRemovedCharacter(const Line& activeLine);
+    // Renders the visible character at a console position
+    void renderPosition(int x, int y) const;
 
     // Checks whether the line has completely left the console
     bool isLineFinished(const Line& activeLine) const;

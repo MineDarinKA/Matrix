@@ -1,4 +1,5 @@
 #include "Line.h"
+#include <cstddef>
 #include <cstdlib>
 
 // Creates a line with the specified parameters
@@ -64,6 +65,25 @@ int Line::getX() const
 int Line::getY() const
 {
     return y;
+}
+
+// Returns the character at a specified position, or nullptr if absent
+const Character* Line::getCharacterAt(int characterX, int characterY) const
+{
+    const int characterIndex = characterY - y;
+
+    if (characterIndex < 0 ||
+        characterIndex >= static_cast<int>(characters.size()))
+    {
+        return nullptr;
+    }
+
+    if (characterX != x + getCharacterOffset(characterY))
+    {
+        return nullptr;
+    }
+
+    return &characters[static_cast<std::size_t>(characterIndex)];
 }
 
 const Character& Line::getNewCharacter() const
