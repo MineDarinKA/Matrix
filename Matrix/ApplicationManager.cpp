@@ -1,5 +1,7 @@
 #include "ApplicationManager.h"
 #include "Console.h"
+#include <algorithm>
+#include <cstddef>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -16,28 +18,59 @@ ApplicationManager::ApplicationManager(int frequency, int speed, int length, cha
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
+// Generates sorted random appearance times within one second
+std::vector<Line::Clock::time_point> ApplicationManager::generateSpawnSchedule(
+    Line::Clock::time_point secondStart
+)
+{
+    std::vector<Line::Clock::time_point> spawnTimes;
+    spawnTimes.reserve(static_cast<std::size_t>(frequency));
+
+    for (int i = 0; i < frequency; ++i)
+    {
+        int offset = std::rand() % 1000;
+
+        spawnTimes.push_back(
+            secondStart + std::chrono::milliseconds(offset)
+        );
+    }
+
+    std::sort(spawnTimes.begin(), spawnTimes.end());
+
+    return spawnTimes;
+}
+
 // Runs the Matrix application
 void ApplicationManager::run()
 {
     Console::clearScreen();
 
-    // Sets a temporary uniform interval between line generations
-    const auto spawnInterval = std::chrono::duration_cast<Line::Clock::duration>(
-        std::chrono::duration<double>(1.0 / frequency)
-    );
-
-    auto nextSpawnTime = Line::Clock::now();
+    auto secondStart = Line::Clock::now();
+    auto spawnTimes = generateSpawnSchedule(secondStart);
+    std::size_t nextSpawnIndex = 0;
 
     while (true)
     {
         const auto currentTime = Line::Clock::now();
         bool updated = false;
 
-        // Creates all lines scheduled up to the current moment
-        while (currentTime >= nextSpawnTime)
+        // Creates all lines whose scheduled appearance time has passed
+        while (true)
         {
-            createLine(nextSpawnTime);
-            nextSpawnTime += spawnInterval;
+            if (nextSpawnIndex == spawnTimes.size())
+            {
+                secondStart += std::chrono::seconds(1);
+                spawnTimes = generateSpawnSchedule(secondStart);
+                nextSpawnIndex = 0;
+            }
+
+            if (currentTime < spawnTimes[nextSpawnIndex])
+            {
+                break;
+            }
+
+            createLine(spawnTimes[nextSpawnIndex]);
+            ++nextSpawnIndex;
             updated = true;
         }
 

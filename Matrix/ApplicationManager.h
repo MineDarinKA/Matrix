@@ -12,6 +12,11 @@ public:
     void run();
 
 private:
+    // Generates sorted random appearance times within one second
+    std::vector<Line::Clock::time_point> generateSpawnSchedule(
+        Line::Clock::time_point secondStart
+    );
+
     // Creates a new line at a random horizontal position
     void createLine(Line::Clock::time_point startTime);
 
