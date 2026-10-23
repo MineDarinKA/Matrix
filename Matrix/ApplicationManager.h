@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <vector>
 #include "Line.h"
 
 // Manages the Matrix application
@@ -13,20 +13,20 @@ public:
 
 private:
     // Creates a new line at a random horizontal position
-    void createLine();
+    void createLine(Line::Clock::time_point startTime);
 
     // Renders the newly generated character
-    void renderNewCharacter();
+    void renderNewCharacter(const Line& activeLine);
 
     // Clears the character removed from the end
-    void clearRemovedCharacter();
+    void clearRemovedCharacter(const Line& activeLine);
 
     // Checks whether the line has completely left the console
-    bool isLineFinished() const;
+    bool isLineFinished(const Line& activeLine) const;
 
     int frequency;
     int speed;
     int length;
     char epilepsyMode;
-    std::unique_ptr<Line> line;
+    std::vector<Line> lines;
 };
