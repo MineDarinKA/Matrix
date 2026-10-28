@@ -1,13 +1,14 @@
 #pragma once
 
 #include <vector>
+#include "ApplicationSettings.h"
 #include "Line.h"
 
 // Manages the Matrix application
 class ApplicationManager
 {
 public:
-    ApplicationManager(int frequency, int speed, int length, char epilepsyMode);
+    explicit ApplicationManager(const ApplicationSettings& settings);
 
     void run();
 
@@ -26,9 +27,6 @@ private:
     // Checks whether the line has completely left the console
     bool isLineFinished(const Line& activeLine) const;
 
-    int frequency;
-    int speed;
-    int length;
-    char epilepsyMode;
+    ApplicationSettings settings;
     std::vector<Line> lines;
 };

@@ -9,11 +9,8 @@
 #include <windows.h>
 
 // Creates an application manager with the specified parameters
-ApplicationManager::ApplicationManager(int frequency, int speed, int length, char epilepsyMode)
-    : frequency(frequency),
-    speed(speed),
-    length(length),
-    epilepsyMode(epilepsyMode)
+ApplicationManager::ApplicationManager(const ApplicationSettings& settings)
+    : settings(settings)
 {
     // Initialize the random number generator
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
@@ -25,9 +22,9 @@ std::vector<Line::Clock::time_point> ApplicationManager::generateSpawnSchedule(
 )
 {
     std::vector<Line::Clock::time_point> spawnTimes;
-    spawnTimes.reserve(static_cast<std::size_t>(frequency));
+    spawnTimes.reserve(static_cast<std::size_t>(settings.frequency));
 
-    for (int i = 0; i < frequency; ++i)
+    for (int i = 0; i < settings.frequency; ++i)
     {
         int offset = std::rand() % 1000;
 
@@ -175,7 +172,12 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
     const int y = Console::getHeight();
 
     lines.emplace_back(
-        length, x, y, epilepsyMode, speed, startTime
+        settings.length,
+        x,
+        y,
+        settings.epilepsyMode,
+        settings.speed,
+        startTime
     );
 }
 

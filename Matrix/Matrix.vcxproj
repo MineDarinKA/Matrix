@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ApplicationManager.h" />
+    <ClInclude Include="ApplicationSettings.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="Line.h" />
