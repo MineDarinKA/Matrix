@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <chrono>
 #include <cstdlib>
+#include <unordered_set>
 #include <ctime>
 #include <utility>
 #include <windows.h>
@@ -49,6 +50,7 @@ void ApplicationManager::run()
     std::size_t nextSpawnIndex = 0;
 
     std::vector<std::pair<int, int>> changedPositions;
+    std::unordered_set<std::size_t> movedLineIds;
 
     while (true)
     {
@@ -78,7 +80,6 @@ void ApplicationManager::run()
             updated = true;
         }
 
-
         // Updates all lines and records changed positions
         for (Line& activeLine : lines)
         {
@@ -87,17 +88,73 @@ void ApplicationManager::run()
                 continue;
             }
 
+            movedLineIds.insert(activeLine.getId());
+
             const Figure& figure = activeLine;
             figure.collectChangedPositions(changedPositions);
+
+            // Create only the first explosion of each line
+            if (activeLine.didExplode())
+            {
+                createExplosion(
+                    activeLine.getId(),
+                    activeLine.getNewCharacterX(),
+                    activeLine.getNewCharacterY(),
+                    currentTime
+                );
+            }
 
             updated = true;
         }
 
+        // Updates explosions and checks collisions with their source lines
+        for (Explosion& activeExplosion : explosions)
+        {
+            const bool waveUpdated = activeExplosion.update(currentTime);
+
+            if (waveUpdated)
+            {
+                const Figure& figure = activeExplosion;
+                figure.collectChangedPositions(changedPositions);
+                updated = true;
+            }
+
+            // Check collisions only when the wave or its line has moved
+            if (!waveUpdated &&
+                !movedLineIds.contains(activeExplosion.getSourceLineId()))
+            {
+                continue;
+            }
+
+            const auto sourceLine = std::find_if(
+                lines.begin(),
+                lines.end(),
+                [&activeExplosion](const Line& activeLine)
+                {
+                    return activeLine.getId() ==
+                        activeExplosion.getSourceLineId();
+                }
+            );
+
+            if (sourceLine != lines.end())
+            {
+                sourceLine->removeCharactersInExplosion(
+                    activeExplosion,
+                    changedPositions
+                );
+            }
+        }
 
         // Removes lines that have left the screen or been fully destroyed
         std::erase_if(lines, [this](const Line& activeLine)
             {
                 return isLineFinished(activeLine);
+            });
+
+        // Removes finished explosions after collecting their cleared positions
+        std::erase_if(explosions, [](const Explosion& activeExplosion)
+            {
+                return activeExplosion.isFinished();
             });
 
         // Redraws each changed position only once
@@ -168,12 +225,31 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
     const int y = Console::getHeight();
 
     lines.emplace_back(
+        nextLineId++,
         settings.length,
         x,
         y,
         settings.epilepsyMode,
         settings.speed,
         settings.explosionProbability,
+        startTime
+    );
+}
+
+// Creates an explosion at the specified position
+void ApplicationManager::createExplosion(
+    std::size_t sourceLineId,
+    int centerX,
+    int centerY,
+    Line::Clock::time_point startTime
+)
+{
+    explosions.emplace_back(
+        sourceLineId,
+        centerX,
+        centerY,
+        settings.minExplosionRadius,
+        settings.maxExplosionRadius,
         startTime
     );
 }
@@ -185,6 +261,19 @@ void ApplicationManager::renderPosition(int x, int y) const
         y < 0 || y >= Console::getHeight())
     {
         return;
+    }
+
+    // Draw explosions over lines, giving newer explosions priority
+    for (auto explosionIterator = explosions.rbegin();
+        explosionIterator != explosions.rend();
+        ++explosionIterator)
+    {
+        const Figure& figure = *explosionIterator;
+
+        if (figure.renderAt(x, y))
+        {
+            return;
+        }
     }
 
     // Check newer lines first to preserve correct rendering of overlaps
@@ -202,6 +291,7 @@ void ApplicationManager::renderPosition(int x, int y) const
 
     Console::clearCharacter(x, y);
 }
+
 
 // Checks whether a line has left the screen or been fully destroyed
 bool ApplicationManager::isLineFinished(const Line& activeLine) const

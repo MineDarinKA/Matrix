@@ -4,8 +4,10 @@
 #include <cstdlib>
 
 // Chooses the final radius independently for each explosion
-Explosion::Explosion(int centerX, int centerY, int minRadius, int maxRadius, Clock::time_point startTime)
-    : centerX(centerX),
+Explosion::Explosion(std::size_t sourceLineId, int centerX, int centerY,
+    int minRadius, int maxRadius, Clock::time_point startTime)
+    : sourceLineId(sourceLineId),
+    centerX(centerX),
     centerY(centerY),
     targetRadius(minRadius + std::rand() % (maxRadius - minRadius + 1)),
     currentRadius(0),
@@ -49,6 +51,18 @@ bool Explosion::update(Clock::time_point currentTime)
 bool Explosion::isFinished() const
 {
     return finished;
+}
+
+// Returns the identifier of the line that created this explosion
+std::size_t Explosion::getSourceLineId() const
+{
+    return sourceLineId;
+}
+
+// Checks whether the current wave occupies a console position
+bool Explosion::occupiesPosition(int x, int y) const
+{
+    return characters.contains({ x, y });
 }
 
 // Renders one character of the current wave if present

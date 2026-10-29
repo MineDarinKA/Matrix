@@ -1,11 +1,15 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <deque>
+#include <optional>
 #include <utility>
 #include <vector>
 #include "Character.h"
 #include "Figure.h"
+
+class Explosion;
 
 // Represents a line moving from bottom to top
 class Line : public Figure
@@ -13,8 +17,8 @@ class Line : public Figure
 public:
     using Clock = std::chrono::steady_clock;
 
-    Line(int length, int x, int y, char epilepsyMode, int speed,
-        int explosionProbability, Clock::time_point startTime);
+    Line(std::size_t id, int length, int x, int y, char epilepsyMode,
+        int speed, int explosionProbability, Clock::time_point startTime);
 
     // Renders the line character at the specified position
     bool renderAt(int x, int y) const override;
@@ -33,6 +37,13 @@ public:
     // Returns whether the latest movement step triggered an explosion
     bool didExplode() const;
 
+    // Removes this line's characters touched by its explosion wave
+    void removeCharactersInExplosion(
+        const Explosion& explosion,
+        std::vector<std::pair<int, int>>& changedPositions
+    );
+
+    std::size_t getId() const;
     int getLength() const;
     int getX() const;
     int getY() const;
@@ -55,7 +66,8 @@ private:
 
     // Calculates the horizontal offset of a character in the zig-zag line
     int getCharacterOffset(int characterY) const;
-
+    
+    std::size_t id;
     int length;
     int x;
     int y;
@@ -68,11 +80,12 @@ private:
     // Scheduled time of the next movement step
     Clock::time_point nextMoveTime;
 
-    // Stores characters from the newest head to the oldest tail
-    std::deque<Character> characters;
+    // Empty slots preserve positions of characters destroyed by the wave
+    std::deque<std::optional<Character>> characters;
 
     // Positions of characters removed during the latest step
     std::vector<std::pair<int, int>> removedPositions;
 
     bool exploded;
+    bool explosionTriggered;
 };

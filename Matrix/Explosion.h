@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <map>
 #include <utility>
 #include <vector>
@@ -13,13 +14,20 @@ class Explosion : public Figure
 public:
     using Clock = std::chrono::steady_clock;
 
-    Explosion(int centerX, int centerY, int minRadius, int maxRadius, Clock::time_point startTime);
+    Explosion(std::size_t sourceLineId, int centerX, int centerY,
+        int minRadius, int maxRadius, Clock::time_point startTime);
 
     // Advances the wave at a fixed rate of two radius steps per second
     bool update(Clock::time_point currentTime);
 
     // Indicates that the final wave has disappeared
     bool isFinished() const;
+
+    // Returns the identifier of the line that created this explosion
+    std::size_t getSourceLineId() const;
+
+    // Checks whether the current wave occupies a console position
+    bool occupiesPosition(int x, int y) const;
 
     // Renders one character of the current wave if present
     bool renderAt(int x, int y) const override;
@@ -36,6 +44,7 @@ private:
     void addCharacter(int x, int y);
     Character createCharacter() const;
 
+    std::size_t sourceLineId;
     int centerX;
     int centerY;
     int targetRadius;

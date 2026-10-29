@@ -1,12 +1,14 @@
 #include "Line.h"
 #include "Console.h"
+#include "Explosion.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Creates a line with the specified parameters
-Line::Line(int length, int x, int y, char epilepsyMode, int speed,
-    int explosionProbability, Clock::time_point startTime)
-    : length(length),
+Line::Line(std::size_t id, int length, int x, int y, char epilepsyMode,
+    int speed, int explosionProbability, Clock::time_point startTime)
+    : id(id),
+    length(length),
     x(x),
     y(y),
     epilepsyMode(epilepsyMode),
@@ -14,10 +16,10 @@ Line::Line(int length, int x, int y, char epilepsyMode, int speed,
     stepInterval(std::chrono::duration_cast<Clock::duration>(
         std::chrono::duration<double>(1.0 / speed))),
     nextMoveTime(startTime),
-    exploded(false)
+    exploded(false),
+    explosionTriggered(false)
 {
 }
-
 
 // Updates the line when its next movement step is due
 bool Line::update(Clock::time_point currentTime)
@@ -28,12 +30,21 @@ bool Line::update(Clock::time_point currentTime)
     }
 
     move();
+    explosionTriggered = false;
 
-    // Check the explosion probability on every movement step
-    exploded = std::rand() % 1000 < explosionProbability;
-
-    if (exploded)
+    // A line can explode only once
+    if (!exploded && std::rand() % 1000 < explosionProbability)
     {
+        exploded = true;
+        explosionTriggered = true;
+
+        // Remove the head immediately at the explosion center
+        characters.front().reset();
+        removedPositions.emplace_back(
+            getNewCharacterX(),
+            getNewCharacterY()
+        );
+
         --length;
         trimCharacters();
     }
@@ -54,7 +65,12 @@ Line::Clock::time_point Line::getNextMoveTime() const
 // Returns whether the latest movement step triggered an explosion
 bool Line::didExplode() const
 {
-    return exploded;
+    return explosionTriggered;
+}
+
+std::size_t Line::getId() const
+{
+    return id;
 }
 
 // Moves the line one step upward
@@ -114,7 +130,14 @@ const Character* Line::getCharacterAt(int characterX, int characterY) const
         return nullptr;
     }
 
-    return &characters[static_cast<std::size_t>(characterIndex)];
+    const auto& character = characters[static_cast<std::size_t>(characterIndex)];
+
+    if (!character.has_value())
+    {
+        return nullptr;
+    }
+
+    return &character.value();
 }
 
 // Renders the line character at the specified position
@@ -148,6 +171,30 @@ void Line::collectChangedPositions(
         removedPositions.begin(),
         removedPositions.end()
     );
+}
+
+// Removes this line's characters touched by its explosion wave
+void Line::removeCharactersInExplosion(
+    const Explosion& explosion,
+    std::vector<std::pair<int, int>>& changedPositions
+)
+{
+    for (std::size_t index = 0; index < characters.size(); ++index)
+    {
+        if (!characters[index].has_value())
+        {
+            continue;
+        }
+
+        const int characterY = y + static_cast<int>(index);
+        const int characterX = x + getCharacterOffset(characterY);
+
+        if (explosion.occupiesPosition(characterX, characterY))
+        {
+            characters[index].reset();
+            changedPositions.emplace_back(characterX, characterY);
+        }
+    }
 }
 
 int Line::getNewCharacterX() const
