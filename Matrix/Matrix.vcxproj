@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="ApplicationManager.cpp" />
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Console.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="ApplicationSettings.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="Console.h" />
+    <ClInclude Include="Explosion.h" />
     <ClInclude Include="Figure.h" />
     <ClInclude Include="Line.h" />
   </ItemGroup>
