@@ -94,7 +94,7 @@ void ApplicationManager::run()
         }
 
 
-        // Removes lines that have completely left the console
+        // Removes lines that have left the screen or been fully destroyed
         std::erase_if(lines, [this](const Line& activeLine)
             {
                 return isLineFinished(activeLine);
@@ -173,6 +173,7 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
         y,
         settings.epilepsyMode,
         settings.speed,
+        settings.explosionProbability,
         startTime
     );
 }
@@ -202,8 +203,9 @@ void ApplicationManager::renderPosition(int x, int y) const
     Console::clearCharacter(x, y);
 }
 
-// Checks whether a line has completely left the console
+// Checks whether a line has left the screen or been fully destroyed
 bool ApplicationManager::isLineFinished(const Line& activeLine) const
 {
-    return activeLine.getY() + activeLine.getLength() <= 0;
+    return activeLine.getLength() == 0 ||
+        activeLine.getY() + activeLine.getLength() <= 0;
 }

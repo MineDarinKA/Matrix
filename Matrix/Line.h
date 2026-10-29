@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <deque>
+#include <utility>
+#include <vector>
 #include "Character.h"
 #include "Figure.h"
 
@@ -11,7 +13,8 @@ class Line : public Figure
 public:
     using Clock = std::chrono::steady_clock;
 
-    Line(int length, int x, int y, char epilepsyMode, int speed, Clock::time_point startTime);
+    Line(int length, int x, int y, char epilepsyMode, int speed,
+        int explosionProbability, Clock::time_point startTime);
 
     // Renders the line character at the specified position
     bool renderAt(int x, int y) const override;
@@ -27,6 +30,9 @@ public:
     // Returns the scheduled time of the next movement step
     Clock::time_point getNextMoveTime() const;
 
+    // Returns whether the latest movement step triggered an explosion
+    bool didExplode() const;
+
     int getLength() const;
     int getX() const;
     int getY() const;
@@ -34,17 +40,15 @@ public:
     // Returns the character at a specified position, or nullptr if absent
     const Character* getCharacterAt(int characterX, int characterY) const;
 
-    const Character& getNewCharacter() const;
     int getNewCharacterX() const;
     int getNewCharacterY() const;
-
-    bool hasRemovedCharacter() const;
-    int getRemovedCharacterX() const;
-    int getRemovedCharacterY() const;
 
 private:
     // Moves the line one step upward and updates its characters
     void move();
+
+    // Removes excess tail characters and records their positions
+    void trimCharacters();
 
     // Creates a new character with the current color mode
     Character createCharacter() const;
@@ -56,6 +60,7 @@ private:
     int x;
     int y;
     char epilepsyMode;
+    int explosionProbability;
 
     // Time interval between consecutive movement steps
     Clock::duration stepInterval;
@@ -66,6 +71,8 @@ private:
     // Stores characters from the newest head to the oldest tail
     std::deque<Character> characters;
 
-    int removedCharacterY;
-    bool characterRemoved;
+    // Positions of characters removed during the latest step
+    std::vector<std::pair<int, int>> removedPositions;
+
+    bool exploded;
 };

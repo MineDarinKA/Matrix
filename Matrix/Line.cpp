@@ -4,28 +4,39 @@
 #include <cstdlib>
 
 // Creates a line with the specified parameters
-Line::Line(int length, int x, int y, char epilepsyMode, int speed, Clock::time_point startTime)
+Line::Line(int length, int x, int y, char epilepsyMode, int speed,
+    int explosionProbability, Clock::time_point startTime)
     : length(length),
     x(x),
     y(y),
     epilepsyMode(epilepsyMode),
+    explosionProbability(explosionProbability),
     stepInterval(std::chrono::duration_cast<Clock::duration>(
         std::chrono::duration<double>(1.0 / speed))),
     nextMoveTime(startTime),
-    removedCharacterY(0),
-    characterRemoved(false)
+    exploded(false)
 {
 }
+
 
 // Updates the line when its next movement step is due
 bool Line::update(Clock::time_point currentTime)
 {
-    if (currentTime < nextMoveTime)
+    if (length == 0 || currentTime < nextMoveTime)
     {
         return false;
     }
 
     move();
+
+    // Check the explosion probability on every movement step
+    exploded = std::rand() % 1000 < explosionProbability;
+
+    if (exploded)
+    {
+        --length;
+        trimCharacters();
+    }
 
     // Advance the scheduled time instead of current time to avoid drift
     nextMoveTime += stepInterval;
@@ -33,28 +44,43 @@ bool Line::update(Clock::time_point currentTime)
     return true;
 }
 
+
 // Returns the scheduled time of the next movement step
 Line::Clock::time_point Line::getNextMoveTime() const
 {
     return nextMoveTime;
 }
 
+// Returns whether the latest movement step triggered an explosion
+bool Line::didExplode() const
+{
+    return exploded;
+}
+
 // Moves the line one step upward
 void Line::move()
 {
     --y;
-    characterRemoved = false;
+    removedPositions.clear();
 
-    // Grow from the head and remove the oldest character when exceeding the length
+    // Grow from the head and remove excess characters from the tail
     characters.push_front(createCharacter());
+    trimCharacters();
+}
 
-    if (static_cast<int>(characters.size()) > length)
+// Removes excess tail characters and records their positions
+void Line::trimCharacters()
+{
+    while (characters.size() > static_cast<std::size_t>(length))
     {
-        removedCharacterY = y + length;
+        const int removedY = y + static_cast<int>(characters.size()) - 1;
+        const int removedX = x + getCharacterOffset(removedY);
+
+        removedPositions.emplace_back(removedX, removedY);
         characters.pop_back();
-        characterRemoved = true;
     }
 }
+
 
 int Line::getLength() const
 {
@@ -117,18 +143,11 @@ void Line::collectChangedPositions(
         getNewCharacterY()
     );
 
-    if (hasRemovedCharacter())
-    {
-        positions.emplace_back(
-            getRemovedCharacterX(),
-            getRemovedCharacterY()
-        );
-    }
-}
-
-const Character& Line::getNewCharacter() const
-{
-    return characters.front();
+    positions.insert(
+        positions.end(),
+        removedPositions.begin(),
+        removedPositions.end()
+    );
 }
 
 int Line::getNewCharacterX() const
@@ -139,21 +158,6 @@ int Line::getNewCharacterX() const
 int Line::getNewCharacterY() const
 {
     return y;
-}
-
-bool Line::hasRemovedCharacter() const
-{
-    return characterRemoved;
-}
-
-int Line::getRemovedCharacterX() const
-{
-    return x + getCharacterOffset(removedCharacterY);
-}
-
-int Line::getRemovedCharacterY() const
-{
-    return removedCharacterY;
 }
 
 // Creates a new character with the current color mode
