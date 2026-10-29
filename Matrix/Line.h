@@ -3,14 +3,23 @@
 #include <chrono>
 #include <deque>
 #include "Character.h"
+#include "Figure.h"
 
 // Represents a line moving from bottom to top
-class Line
+class Line : public Figure
 {
 public:
     using Clock = std::chrono::steady_clock;
 
     Line(int length, int x, int y, char epilepsyMode, int speed, Clock::time_point startTime);
+
+    // Renders the line character at the specified position
+    bool renderAt(int x, int y) const override;
+
+    // Records positions changed during the latest movement step
+    void collectChangedPositions(
+        std::vector<std::pair<int, int>>& positions
+    ) const override;
 
     // Updates the line when its next movement step is due
     bool update(Clock::time_point currentTime);
@@ -54,6 +63,7 @@ private:
     // Scheduled time of the next movement step
     Clock::time_point nextMoveTime;
 
+    // Stores characters from the newest head to the oldest tail
     std::deque<Character> characters;
 
     int removedCharacterY;

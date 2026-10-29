@@ -1,4 +1,5 @@
 #include "Line.h"
+#include "Console.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -25,6 +26,8 @@ bool Line::update(Clock::time_point currentTime)
     }
 
     move();
+
+    // Advance the scheduled time instead of current time to avoid drift
     nextMoveTime += stepInterval;
 
     return true;
@@ -42,6 +45,7 @@ void Line::move()
     --y;
     characterRemoved = false;
 
+    // Grow from the head and remove the oldest character when exceeding the length
     characters.push_front(createCharacter());
 
     if (static_cast<int>(characters.size()) > length)
@@ -70,6 +74,7 @@ int Line::getY() const
 // Returns the character at a specified position, or nullptr if absent
 const Character* Line::getCharacterAt(int characterX, int characterY) const
 {
+    // Convert the screen position into an index within the line
     const int characterIndex = characterY - y;
 
     if (characterIndex < 0 ||
@@ -84,6 +89,41 @@ const Character* Line::getCharacterAt(int characterX, int characterY) const
     }
 
     return &characters[static_cast<std::size_t>(characterIndex)];
+}
+
+// Renders the line character at the specified position
+bool Line::renderAt(int x, int y) const
+{
+    const Character* character = getCharacterAt(x, y);
+
+    if (character == nullptr)
+    {
+        return false;
+    }
+
+    Console::setCursorPosition(x, y);
+    Console::writeCharacter(*character);
+
+    return true;
+}
+
+// Records positions changed during the latest movement step
+void Line::collectChangedPositions(
+    std::vector<std::pair<int, int>>& positions
+) const
+{
+    positions.emplace_back(
+        getNewCharacterX(),
+        getNewCharacterY()
+    );
+
+    if (hasRemovedCharacter())
+    {
+        positions.emplace_back(
+            getRemovedCharacterX(),
+            getRemovedCharacterY()
+        );
+    }
 }
 
 const Character& Line::getNewCharacter() const

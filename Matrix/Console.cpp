@@ -30,6 +30,7 @@ void Console::clearScreen()
         &charactersWritten
     );
 
+    // Reset text attributes to prevent leftover colors
     FillConsoleOutputAttribute(
         consoleHandle,
         consoleInfo.wAttributes,

@@ -1,5 +1,6 @@
 #include "ApplicationManager.h"
 #include "Console.h"
+#include "Figure.h"
 #include <algorithm>
 #include <cstddef>
 #include <chrono>
@@ -59,6 +60,7 @@ void ApplicationManager::run()
         // Creates all lines whose scheduled appearance time has passed
         while (true)
         {
+            // Keep line generation aligned with fixed one-second intervals
             if (nextSpawnIndex == spawnTimes.size())
             {
                 secondStart += std::chrono::seconds(1);
@@ -76,6 +78,7 @@ void ApplicationManager::run()
             updated = true;
         }
 
+
         // Updates all lines and records changed positions
         for (Line& activeLine : lines)
         {
@@ -84,21 +87,12 @@ void ApplicationManager::run()
                 continue;
             }
 
-            changedPositions.emplace_back(
-                activeLine.getNewCharacterX(),
-                activeLine.getNewCharacterY()
-            );
-
-            if (activeLine.hasRemovedCharacter())
-            {
-                changedPositions.emplace_back(
-                    activeLine.getRemovedCharacterX(),
-                    activeLine.getRemovedCharacterY()
-                );
-            }
+            const Figure& figure = activeLine;
+            figure.collectChangedPositions(changedPositions);
 
             updated = true;
         }
+
 
         // Removes lines that have completely left the console
         std::erase_if(lines, [this](const Line& activeLine)
@@ -130,6 +124,8 @@ void ApplicationManager::run()
 void ApplicationManager::createLine(Line::Clock::time_point startTime)
 {
     const int consoleWidth = Console::getWidth();
+
+    // Leave space for zig-zag offsets near the right edge
     const int positionCount = consoleWidth > 2 ? consoleWidth - 2 : 1;
 
     std::vector<bool> occupiedPositions(
@@ -190,21 +186,17 @@ void ApplicationManager::renderPosition(int x, int y) const
         return;
     }
 
-    // Gives priority to the most recently created line
+    // Check newer lines first to preserve correct rendering of overlaps
     for (auto lineIterator = lines.rbegin();
         lineIterator != lines.rend();
         ++lineIterator)
     {
-        const Character* character = lineIterator->getCharacterAt(x, y);
+        const Figure& figure = *lineIterator;
 
-        if (character == nullptr)
+        if (figure.renderAt(x, y))
         {
-            continue;
+            return;
         }
-
-        Console::setCursorPosition(x, y);
-        Console::writeCharacter(*character);
-        return;
     }
 
     Console::clearCharacter(x, y);
