@@ -3,13 +3,10 @@
 #include <chrono>
 #include <cstddef>
 #include <deque>
-#include <optional>
 #include <utility>
 #include <vector>
 #include "Character.h"
 #include "Figure.h"
-
-class Explosion;
 
 // Represents a line moving from bottom to top
 class Line : public Figure
@@ -17,7 +14,7 @@ class Line : public Figure
 public:
     using Clock = std::chrono::steady_clock;
 
-    Line(std::size_t id, int length, int x, int y, char epilepsyMode,
+    Line(int length, int x, int y, char epilepsyMode,
         int speed, int explosionProbability, Clock::time_point startTime);
 
     // Renders the line character at the specified position
@@ -37,14 +34,12 @@ public:
     // Returns whether the latest movement step triggered an explosion
     bool didExplode() const;
 
-    // Removes this line's characters touched by its explosion wave
-    void removeCharactersInExplosion(
-        const Explosion& explosion,
-        std::vector<std::pair<int, int>>& changedPositions
-    );
+    // Destroys the current head and reduces the maximum length
+    void explode();
 
-    std::size_t getId() const;
+    // Returns the maximum allowed line length
     int getLength() const;
+
     int getX() const;
     int getY() const;
 
@@ -58,16 +53,15 @@ private:
     // Moves the line one step upward and updates its characters
     void move();
 
-    // Removes excess tail characters and records their positions
-    void trimCharacters();
+    // Removes the last character of the line
+    void removeTail();
 
     // Creates a new character with the current color mode
     Character createCharacter() const;
 
     // Calculates the horizontal offset of a character in the zig-zag line
     int getCharacterOffset(int characterY) const;
-    
-    std::size_t id;
+
     int length;
     int x;
     int y;
@@ -80,12 +74,11 @@ private:
     // Scheduled time of the next movement step
     Clock::time_point nextMoveTime;
 
-    // Empty slots preserve positions of characters destroyed by the wave
-    std::deque<std::optional<Character>> characters;
+    // Characters currently belonging to the line
+    std::deque<Character> characters;
 
     // Positions of characters removed during the latest step
     std::vector<std::pair<int, int>> removedPositions;
 
-    bool exploded;
     bool explosionTriggered;
 };

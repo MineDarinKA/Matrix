@@ -1,14 +1,12 @@
 #include "Line.h"
 #include "Console.h"
-#include "Explosion.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Creates a line with the specified parameters
-Line::Line(std::size_t id, int length, int x, int y, char epilepsyMode,
+Line::Line(int length, int x, int y, char epilepsyMode,
     int speed, int explosionProbability, Clock::time_point startTime)
-    : id(id),
-    length(length),
+    : length(length),
     x(x),
     y(y),
     epilepsyMode(epilepsyMode),
@@ -16,7 +14,6 @@ Line::Line(std::size_t id, int length, int x, int y, char epilepsyMode,
     stepInterval(std::chrono::duration_cast<Clock::duration>(
         std::chrono::duration<double>(1.0 / speed))),
     nextMoveTime(startTime),
-    exploded(false),
     explosionTriggered(false)
 {
 }
@@ -29,24 +26,15 @@ bool Line::update(Clock::time_point currentTime)
         return false;
     }
 
-    move();
+    removedPositions.clear();
     explosionTriggered = false;
 
-    // A line can explode only once
-    if (!exploded && std::rand() % 1000 < explosionProbability)
+    move();
+
+    // Check the explosion probability at every movement step
+    if (std::rand() % 1000 < explosionProbability)
     {
-        exploded = true;
         explosionTriggered = true;
-
-        // Remove the head immediately at the explosion center
-        characters.front().reset();
-        removedPositions.emplace_back(
-            getNewCharacterX(),
-            getNewCharacterY()
-        );
-
-        --length;
-        trimCharacters();
     }
 
     // Advance the scheduled time instead of current time to avoid drift
@@ -54,7 +42,6 @@ bool Line::update(Clock::time_point currentTime)
 
     return true;
 }
-
 
 // Returns the scheduled time of the next movement step
 Line::Clock::time_point Line::getNextMoveTime() const
@@ -68,35 +55,41 @@ bool Line::didExplode() const
     return explosionTriggered;
 }
 
-std::size_t Line::getId() const
+// Destroys the current head and reduces the maximum length
+void Line::explode()
 {
-    return id;
+    removedPositions.emplace_back(
+        getNewCharacterX(),
+        getNewCharacterY()
+    );
+
+    characters.pop_front();
+    ++y;
+    --length;
 }
 
 // Moves the line one step upward
 void Line::move()
 {
     --y;
-    removedPositions.clear();
 
-    // Grow from the head and remove excess characters from the tail
     characters.push_front(createCharacter());
-    trimCharacters();
-}
 
-// Removes excess tail characters and records their positions
-void Line::trimCharacters()
-{
-    while (characters.size() > static_cast<std::size_t>(length))
+    if (characters.size() > static_cast<std::size_t>(length))
     {
-        const int removedY = y + static_cast<int>(characters.size()) - 1;
-        const int removedX = x + getCharacterOffset(removedY);
-
-        removedPositions.emplace_back(removedX, removedY);
-        characters.pop_back();
+        removeTail();
     }
 }
 
+// Removes the last character of the line
+void Line::removeTail()
+{
+    const int tailY = y + static_cast<int>(characters.size()) - 1;
+    const int tailX = x + getCharacterOffset(tailY);
+
+    removedPositions.emplace_back(tailX, tailY);
+    characters.pop_back();
+}
 
 int Line::getLength() const
 {
@@ -116,7 +109,6 @@ int Line::getY() const
 // Returns the character at a specified position, or nullptr if absent
 const Character* Line::getCharacterAt(int characterX, int characterY) const
 {
-    // Convert the screen position into an index within the line
     const int characterIndex = characterY - y;
 
     if (characterIndex < 0 ||
@@ -130,14 +122,7 @@ const Character* Line::getCharacterAt(int characterX, int characterY) const
         return nullptr;
     }
 
-    const auto& character = characters[static_cast<std::size_t>(characterIndex)];
-
-    if (!character.has_value())
-    {
-        return nullptr;
-    }
-
-    return &character.value();
+    return &characters[static_cast<std::size_t>(characterIndex)];
 }
 
 // Renders the line character at the specified position
@@ -161,40 +146,19 @@ void Line::collectChangedPositions(
     std::vector<std::pair<int, int>>& positions
 ) const
 {
-    positions.emplace_back(
-        getNewCharacterX(),
-        getNewCharacterY()
-    );
+    if (!characters.empty())
+    {
+        positions.emplace_back(
+            getNewCharacterX(),
+            getNewCharacterY()
+        );
+    }
 
     positions.insert(
         positions.end(),
         removedPositions.begin(),
         removedPositions.end()
     );
-}
-
-// Removes this line's characters touched by its explosion wave
-void Line::removeCharactersInExplosion(
-    const Explosion& explosion,
-    std::vector<std::pair<int, int>>& changedPositions
-)
-{
-    for (std::size_t index = 0; index < characters.size(); ++index)
-    {
-        if (!characters[index].has_value())
-        {
-            continue;
-        }
-
-        const int characterY = y + static_cast<int>(index);
-        const int characterX = x + getCharacterOffset(characterY);
-
-        if (explosion.occupiesPosition(characterX, characterY))
-        {
-            characters[index].reset();
-            changedPositions.emplace_back(characterX, characterY);
-        }
-    }
 }
 
 int Line::getNewCharacterX() const

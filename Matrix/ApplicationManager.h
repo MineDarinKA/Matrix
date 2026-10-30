@@ -24,7 +24,7 @@ private:
     void createLine(Line::Clock::time_point startTime);
 
     // Creates an explosion at the specified position
-    void createExplosion(std::size_t sourceLineId, int centerX, int centerY,
+    void createExplosion(int centerX, int centerY,
         Line::Clock::time_point startTime);
 
     // Renders the visible character at a console position
@@ -34,7 +34,6 @@ private:
     bool isLineFinished(const Line& activeLine) const;
 
     ApplicationSettings settings;
-    std::size_t nextLineId = 0;
     std::vector<Line> lines;
     std::vector<Explosion> explosions;
 };
