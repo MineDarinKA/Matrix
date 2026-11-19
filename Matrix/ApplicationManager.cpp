@@ -18,23 +18,29 @@ ApplicationManager::ApplicationManager(const ApplicationSettings& settings)
 }
 
 // Generates sorted random appearance times within one second
-std::vector<Line::Clock::time_point> ApplicationManager::generateSpawnSchedule(
+ArrayList<Line::Clock::time_point> ApplicationManager::generateSpawnSchedule(
     Line::Clock::time_point secondStart
 )
 {
-    std::vector<Line::Clock::time_point> spawnTimes;
+    ArrayList<Line::Clock::time_point> spawnTimes;
+
+    // Reserves storage for all scheduled line appearances
     spawnTimes.reserve(static_cast<std::size_t>(settings.frequency));
 
     for (int i = 0; i < settings.frequency; ++i)
     {
-        int offset = std::rand() % 1000;
+        const int offset = std::rand() % 1000;
 
-        spawnTimes.push_back(
+        spawnTimes.pushBack(
             secondStart + std::chrono::milliseconds(offset)
         );
     }
 
-    std::sort(spawnTimes.begin(), spawnTimes.end());
+    // Sorts appearance times without changing their values
+    if (spawnTimes.size() > 1)
+    {
+        std::sort(spawnTimes.begin(), spawnTimes.end());
+    }
 
     return spawnTimes;
 }
@@ -48,7 +54,7 @@ void ApplicationManager::run()
     auto spawnTimes = generateSpawnSchedule(secondStart);
     std::size_t nextSpawnIndex = 0;
 
-    std::vector<std::pair<int, int>> changedPositions;
+    ArrayList<std::pair<int, int>> changedPositions;
 
     while (true)
     {
@@ -144,13 +150,22 @@ void ApplicationManager::run()
         }
 
         // Redraws each changed position only once
-        std::sort(changedPositions.begin(), changedPositions.end());
+        if (changedPositions.size() > 1)
+        {
+            std::sort(changedPositions.begin(), changedPositions.end());
 
-        changedPositions.erase(
-            std::unique(changedPositions.begin(), changedPositions.end()),
-            changedPositions.end()
-        );
+            auto uniqueEnd = std::unique(
+                changedPositions.begin(),
+                changedPositions.end()
+            );
 
+            changedPositions.erase(
+                uniqueEnd,
+                changedPositions.end()
+            );
+        }
+
+        // Renders every affected console position
         for (const auto& position : changedPositions)
         {
             renderPosition(position.first, position.second);
@@ -171,9 +186,14 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
     // Leave space for zig-zag offsets near the right edge
     const int positionCount = consoleWidth > 2 ? consoleWidth - 2 : 1;
 
-    std::vector<bool> occupiedPositions(
-        static_cast<std::size_t>(positionCount), false
-    );
+    // Marks all possible line positions as initially unoccupied
+    ArrayList<bool> occupiedPositions;
+    occupiedPositions.reserve(static_cast<std::size_t>(positionCount));
+
+    for (int i = 0; i < positionCount; ++i)
+    {
+        occupiedPositions.pushBack(false);
+    }
 
     for (const Line& activeLine : lines)
     {
@@ -181,17 +201,19 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
 
         if (activeX >= 0 && activeX < positionCount)
         {
-            occupiedPositions[activeX] = true;
+            occupiedPositions[static_cast<std::size_t>(activeX)] = true;
         }
     }
 
-    std::vector<int> freePositions;
+    // Collects all currently unoccupied line positions
+    ArrayList<int> freePositions;
+    freePositions.reserve(static_cast<std::size_t>(positionCount));
 
     for (int candidateX = 0; candidateX < positionCount; ++candidateX)
     {
-        if (!occupiedPositions[candidateX])
+        if (!occupiedPositions[static_cast<std::size_t>(candidateX)])
         {
-            freePositions.push_back(candidateX);
+            freePositions.pushBack(candidateX);
         }
     }
 
@@ -199,8 +221,10 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
 
     if (!freePositions.empty())
     {
-        const int randomIndex = std::rand() % static_cast<int>(freePositions.size());
-        x = freePositions[randomIndex];
+        const int randomIndex =
+            std::rand() % static_cast<int>(freePositions.size());
+
+        x = freePositions[static_cast<std::size_t>(randomIndex)];
     }
     else
     {

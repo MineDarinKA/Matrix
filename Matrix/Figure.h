@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utility>
-#include <vector>
+#include "ArrayList.h"
 
 // Defines the common interface for rendering console figures
 class Figure
@@ -14,7 +14,6 @@ public:
 
     // Records positions affected by the latest figure update
     virtual void collectChangedPositions(
-        std::vector<std::pair<int, int>>& positions
+        ArrayList<std::pair<int, int>>& positions
     ) const = 0;
 };
-

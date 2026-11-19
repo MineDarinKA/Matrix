@@ -1,9 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <map>
 #include <utility>
-#include <vector>
+#include "ArrayList.h"
 #include "Character.h"
 #include "Figure.h"
 
@@ -27,10 +26,18 @@ public:
 
     // Records both the previous and the new wave positions
     void collectChangedPositions(
-        std::vector<std::pair<int, int>>& positions
+        ArrayList<std::pair<int, int>>& positions
     ) const override;
 
 private:
+    // Stores one explosion character and its console position
+    struct ExplosionCharacter
+    {
+        int x;
+        int y;
+        Character character;
+    };
+
     // Generates a wave outline
     void generateWave();
 
@@ -44,6 +51,6 @@ private:
     Clock::time_point nextStepTime;
     bool finished;
 
-    std::map<std::pair<int, int>, Character> characters;
-    std::vector<std::pair<int, int>> previousPositions;
+    ArrayList<ExplosionCharacter> characters;
+    ArrayList<std::pair<int, int>> previousPositions;
 };

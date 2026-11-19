@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cstddef>
-#include <vector>
 #include "ApplicationSettings.h"
+#include "ArrayList.h"
 #include "Explosion.h"
 #include "Line.h"
 #include "LinkedList.h"
@@ -17,7 +16,7 @@ public:
 
 private:
     // Generates sorted random appearance times within one second
-    std::vector<Line::Clock::time_point> generateSpawnSchedule(
+    ArrayList<Line::Clock::time_point> generateSpawnSchedule(
         Line::Clock::time_point secondStart
     );
 

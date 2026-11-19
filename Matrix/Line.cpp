@@ -58,7 +58,7 @@ bool Line::didExplode() const
 // Destroys the current head and reduces the maximum length
 void Line::explode()
 {
-    removedPositions.emplace_back(
+    removedPositions.emplaceBack(
         getNewCharacterX(),
         getNewCharacterY()
     );
@@ -88,7 +88,7 @@ void Line::removeTail()
     const int tailY = y + static_cast<int>(characters.size()) - 1;
     const int tailX = x + getCharacterOffset(tailY);
 
-    removedPositions.emplace_back(tailX, tailY);
+    removedPositions.emplaceBack(tailX, tailY);
     characters.popBack();
 }
 
@@ -144,22 +144,22 @@ bool Line::renderAt(int x, int y) const
 
 // Records positions changed during the latest movement step
 void Line::collectChangedPositions(
-    std::vector<std::pair<int, int>>& positions
+    ArrayList<std::pair<int, int>>& positions
 ) const
 {
     if (!characters.empty())
     {
-        positions.emplace_back(
+        positions.emplaceBack(
             getNewCharacterX(),
             getNewCharacterY()
         );
     }
 
-    positions.insert(
-        positions.end(),
-        removedPositions.begin(),
-        removedPositions.end()
-    );
+    // Adds positions of characters removed during the latest step
+    for (const auto& removedPosition : removedPositions)
+    {
+        positions.pushBack(removedPosition);
+    }
 }
 
 int Line::getNewCharacterX() const

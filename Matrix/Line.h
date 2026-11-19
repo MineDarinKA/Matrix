@@ -3,10 +3,11 @@
 #include <chrono>
 #include <cstddef>
 #include <utility>
-#include <vector>
+#include "ArrayList.h"
 #include "Character.h"
 #include "Figure.h"
 #include "LinkedList.h"
+
 
 // Represents a line moving from bottom to top
 class Line : public Figure
@@ -22,7 +23,7 @@ public:
 
     // Records positions changed during the latest movement step
     void collectChangedPositions(
-        std::vector<std::pair<int, int>>& positions
+        ArrayList<std::pair<int, int>>& positions
     ) const override;
 
     // Updates the line when its next movement step is due
@@ -78,7 +79,7 @@ private:
     LinkedList<Character> characters;
 
     // Positions of characters removed during the latest step
-    std::vector<std::pair<int, int>> removedPositions;
+    ArrayList<std::pair<int, int>> removedPositions;
 
     bool explosionTriggered;
 };

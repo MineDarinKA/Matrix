@@ -27,7 +27,7 @@ bool Explosion::update(Clock::time_point currentTime)
 
     for (const auto& entry : characters)
     {
-        previousPositions.push_back(entry.first);
+        previousPositions.emplaceBack(entry.x, entry.y);
     }
 
     characters.clear();
@@ -55,32 +55,35 @@ bool Explosion::isFinished() const
 // Renders one character of the current wave if present
 bool Explosion::renderAt(int x, int y) const
 {
-    const auto character = characters.find({ x, y });
-
-    if (character == characters.end())
+    // Searches for a character at the requested position
+    for (const auto& entry : characters)
     {
-        return false;
+        if (entry.x == x && entry.y == y)
+        {
+            Console::setCursorPosition(x, y);
+            Console::writeCharacter(entry.character);
+            return true;
+        }
     }
 
-    Console::setCursorPosition(x, y);
-    Console::writeCharacter(character->second);
-    return true;
+    return false;
 }
 
 // Records both the previous and the new wave positions
 void Explosion::collectChangedPositions(
-    std::vector<std::pair<int, int>>& positions
+    ArrayList<std::pair<int, int>>& positions
 ) const
 {
-    positions.insert(
-        positions.end(),
-        previousPositions.begin(),
-        previousPositions.end()
-    );
+    // Records positions occupied by the previous wave
+    for (const auto& position : previousPositions)
+    {
+        positions.pushBack(position);
+    }
 
+    // Records positions occupied by the current wave
     for (const auto& entry : characters)
     {
-        positions.push_back(entry.first);
+        positions.emplaceBack(entry.x, entry.y);
     }
 }
 
@@ -109,9 +112,21 @@ void Explosion::generateWave()
     }
 }
 
+// Adds a character only if its position is not already occupied
 void Explosion::addCharacter(int x, int y)
 {
-    characters.emplace(std::make_pair(x, y), createCharacter());
+    // Prevents duplicate positions within the same explosion wave
+    for (const auto& entry : characters)
+    {
+        if (entry.x == x && entry.y == y)
+        {
+            return;
+        }
+    }
+
+    characters.pushBack(
+        ExplosionCharacter{ x, y, createCharacter() }
+    );
 }
 
 // Uses printable ASCII symbols and random colors independently of epilepsy mode
