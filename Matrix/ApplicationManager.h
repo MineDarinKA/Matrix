@@ -5,6 +5,7 @@
 #include "ApplicationSettings.h"
 #include "Explosion.h"
 #include "Line.h"
+#include "LinkedList.h"
 
 // Manages the Matrix application
 class ApplicationManager
@@ -34,6 +35,6 @@ private:
     bool isLineFinished(const Line& activeLine) const;
 
     ApplicationSettings settings;
-    std::vector<Line> lines;
-    std::vector<Explosion> explosions;
+    LinkedList<Line> lines;
+    LinkedList<Explosion> explosions;
 };

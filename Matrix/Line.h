@@ -2,11 +2,11 @@
 
 #include <chrono>
 #include <cstddef>
-#include <deque>
 #include <utility>
 #include <vector>
 #include "Character.h"
 #include "Figure.h"
+#include "LinkedList.h"
 
 // Represents a line moving from bottom to top
 class Line : public Figure
@@ -75,7 +75,7 @@ private:
     Clock::time_point nextMoveTime;
 
     // Characters currently belonging to the line
-    std::deque<Character> characters;
+    LinkedList<Character> characters;
 
     // Positions of characters removed during the latest step
     std::vector<std::pair<int, int>> removedPositions;

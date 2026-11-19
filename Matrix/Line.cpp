@@ -63,7 +63,7 @@ void Line::explode()
         getNewCharacterY()
     );
 
-    characters.pop_front();
+    characters.popFront();
     ++y;
     --length;
 }
@@ -73,13 +73,14 @@ void Line::move()
 {
     --y;
 
-    characters.push_front(createCharacter());
+    characters.pushFront(createCharacter());
 
     if (characters.size() > static_cast<std::size_t>(length))
     {
         removeTail();
     }
 }
+
 
 // Removes the last character of the line
 void Line::removeTail()
@@ -88,7 +89,7 @@ void Line::removeTail()
     const int tailX = x + getCharacterOffset(tailY);
 
     removedPositions.emplace_back(tailX, tailY);
-    characters.pop_back();
+    characters.popBack();
 }
 
 int Line::getLength() const
@@ -122,7 +123,7 @@ const Character* Line::getCharacterAt(int characterX, int characterY) const
         return nullptr;
     }
 
-    return &characters[static_cast<std::size_t>(characterIndex)];
+    return &characters.at(static_cast<std::size_t>(characterIndex));
 }
 
 // Renders the line character at the specified position

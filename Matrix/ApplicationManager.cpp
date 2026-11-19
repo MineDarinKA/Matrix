@@ -116,16 +116,32 @@ void ApplicationManager::run()
         }
 
         // Removes lines that have left the screen or been fully destroyed
-        std::erase_if(lines, [this](const Line& activeLine)
+        for (auto lineIterator = lines.begin();
+            lineIterator != lines.end();)
+        {
+            if (isLineFinished(*lineIterator))
             {
-                return isLineFinished(activeLine);
-            });
+                lineIterator = lines.erase(lineIterator);
+            }
+            else
+            {
+                ++lineIterator;
+            }
+        }
 
         // Removes finished explosions after collecting their cleared positions
-        std::erase_if(explosions, [](const Explosion& activeExplosion)
+        for (auto explosionIterator = explosions.begin();
+            explosionIterator != explosions.end();)
+        {
+            if (explosionIterator->isFinished())
             {
-                return activeExplosion.isFinished();
-            });
+                explosionIterator = explosions.erase(explosionIterator);
+            }
+            else
+            {
+                ++explosionIterator;
+            }
+        }
 
         // Redraws each changed position only once
         std::sort(changedPositions.begin(), changedPositions.end());
@@ -194,7 +210,7 @@ void ApplicationManager::createLine(Line::Clock::time_point startTime)
 
     const int y = Console::getHeight();
 
-    lines.emplace_back(
+    lines.emplaceBack(
         settings.length,
         x,
         y,
@@ -212,7 +228,7 @@ void ApplicationManager::createExplosion(
     Line::Clock::time_point startTime
 )
 {
-    explosions.emplace_back(
+    explosions.emplaceBack(
         centerX,
         centerY,
         settings.minExplosionRadius,
